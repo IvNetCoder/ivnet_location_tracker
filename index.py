@@ -1,354 +1,386 @@
-from flask import Flask, request, jsonify, render_template_string
-from flask_cors import CORS
+from flask import Flask, request, jsonify
 import json
-import datetime
-import os
-import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 
-# Database setup
-def init_db():
-    conn = sqlite3.connect('tracking_data.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS tracking_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    session_id TEXT,
-                    ip_address TEXT,
-                    user_agent TEXT,
-                    browser TEXT,
-                    platform TEXT,
-                    language TEXT,
-                    screen TEXT,
-                    timezone TEXT,
-                    latitude REAL,
-                    longitude REAL,
-                    location_accuracy REAL,
-                    event_type TEXT,
-                    timestamp TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )''')
-    conn.commit()
-    conn.close()
+# Store location data in memory (for demo purposes)
+location_data = []
 
-# Initialize database
-init_db()
+@app.route('/')
+def home():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>ivnet Location Tracker</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 50px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                color: white;
+                margin: 0;
+            }
+            .container {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            a { 
+                color: #ffd700; 
+                text-decoration: none; 
+                font-size: 18px; 
+                margin: 10px; 
+                display: inline-block;
+                padding: 10px 20px;
+                border: 2px solid #ffd700;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            a:hover { 
+                background: #ffd700; 
+                color: #333; 
+                transform: translateY(-2px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🌍 ivnet Location Tracker</h1>
+            <p>Professional location tracking system</p>
+            <div>
+                <a href="/tracker">📍 Start Tracking</a>
+                <a href="/dashboard">📊 View Dashboard</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
 
-@app.route('/track', methods=['POST'])
-def track_device():
-    try:
-        data = request.get_json()
+@app.route('/tracker')
+def tracker():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ivnet Location Tracker</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                max-width: 800px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                color: white;
+            }
+            .container {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 30px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            .status { 
+                padding: 15px; 
+                margin: 15px 0; 
+                border-radius: 10px; 
+                text-align: center;
+                font-weight: bold;
+            }
+            .success { background-color: rgba(40, 167, 69, 0.8); }
+            .error { background-color: rgba(220, 53, 69, 0.8); }
+            .info { background-color: rgba(23, 162, 184, 0.8); }
+            button { 
+                padding: 15px 25px; 
+                margin: 10px; 
+                border: none; 
+                border-radius: 10px; 
+                cursor: pointer; 
+                font-size: 16px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                min-width: 200px;
+            }
+            .primary { 
+                background: linear-gradient(45deg, #007bff, #0056b3); 
+                color: white; 
+            }
+            .primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,123,255,0.4); }
+            .secondary { 
+                background: linear-gradient(45deg, #6c757d, #545b62); 
+                color: white; 
+            }
+            .secondary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(108,117,125,0.4); }
+            #locationInfo { 
+                margin: 20px 0; 
+                padding: 20px; 
+                background: rgba(255, 255, 255, 0.1); 
+                border-radius: 10px; 
+                backdrop-filter: blur(5px);
+            }
+            .button-container {
+                text-align: center;
+                margin: 20px 0;
+            }
+            h1 { text-align: center; margin-bottom: 10px; }
+            .subtitle { text-align: center; margin-bottom: 30px; opacity: 0.9; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🌍 ivnet Location Tracker</h1>
+            <p class="subtitle">Track device location and info securely</p>
+            
+            <div class="button-container">
+                <button onclick="getLocation()" class="primary">📍 Get My Location</button>
+                <button onclick="viewDashboard()" class="secondary">📊 View Dashboard</button>
+            </div>
+            
+            <div id="status"></div>
+            <div id="locationInfo"></div>
+        </div>
         
-        # Extract location data
-        location = data.get('location', {})
-        latitude = None
-        longitude = None
-        accuracy = None
-        
-        if isinstance(location, dict) and 'latitude' in location:
-            latitude = location.get('latitude')
-            longitude = location.get('longitude')
-            accuracy = location.get('accuracy')
-        
-        # Store in database
-        conn = sqlite3.connect('tracking_data.db')
-        c = conn.cursor()
-        
-        c.execute('''INSERT INTO tracking_logs 
-                    (session_id, ip_address, user_agent, browser, platform, language, 
-                     screen, timezone, latitude, longitude, location_accuracy, event_type, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (
-                     data.get('sessionId'),
-                     data.get('ipAddress'),
-                     data.get('userAgent'),
-                     data.get('browser'),
-                     data.get('platform'),
-                     data.get('language'),
-                     data.get('screen'),
-                     data.get('timezone'),
-                     latitude,
-                     longitude,
-                     accuracy,
-                     data.get('event', 'initial_load'),
-                     data.get('timestamp')
-                 ))
-        
-        conn.commit()
-        conn.close()
-        
-        print(f"📍 New tracking data received:")
-        print(f"   Session: {data.get('sessionId')}")
-        print(f"   IP: {data.get('ipAddress')}")
-        print(f"   Browser: {data.get('browser')}")
-        print(f"   Location: {latitude}, {longitude}" if latitude else "   Location: Not available")
-        print(f"   Timestamp: {data.get('timestamp')}")
-        print("-" * 50)
-        
-        return jsonify({"status": "success", "message": "Tracking data received"}), 200
-        
-    except Exception as e:
-        print(f"Error processing tracking data: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        <script>
+            function showStatus(message, type = 'success') {
+                const status = document.getElementById('status');
+                status.innerHTML = `<div class="status ${type}">${message}</div>`;
+                
+                setTimeout(() => {
+                    if (type !== 'error') {
+                        status.innerHTML = '';
+                    }
+                }, 5000);
+            }
+            
+            function getLocation() {
+                showStatus('🔍 Getting location...', 'info');
+                
+                if (!navigator.geolocation) {
+                    showStatus('❌ Geolocation not supported by this browser', 'error');
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const data = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent,
+                            platform: navigator.platform,
+                            language: navigator.language,
+                            sessionId: 'session_' + Date.now()
+                        };
+                        
+                        document.getElementById('locationInfo').innerHTML = `
+                            <h3>📍 Location Data Captured:</h3>
+                            <p><strong>Latitude:</strong> ${data.latitude.toFixed(6)}</p>
+                            <p><strong>Longitude:</strong> ${data.longitude.toFixed(6)}</p>
+                            <p><strong>Accuracy:</strong> ${data.accuracy} meters</p>
+                            <p><strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                            <p><strong>Device:</strong> ${data.platform}</p>
+                            <p><strong>Session:</strong> ${data.sessionId}</p>
+                            <p><strong>🗺️ Maps:</strong> <a href="https://www.google.com/maps?q=${data.latitude},${data.longitude}" target="_blank" style="color: #ffd700;">View on Google Maps</a></p>
+                        `;
+                        
+                        fetch('/api/location', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            showStatus('✅ Location saved successfully! Server is ONLINE!', 'success');
+                        })
+                        .catch(error => {
+                            showStatus('⚠️ Location captured but server error', 'error');
+                            console.error('Server error:', error);
+                        });
+                    },
+                    error => {
+                        let errorMsg = 'Unknown error';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg = 'Location access denied by user';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg = 'Location information unavailable';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg = 'Location request timed out';
+                                break;
+                        }
+                        showStatus(`❌ Error: ${errorMsg}`, 'error');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            }
+            
+            function viewDashboard() {
+                window.location.href = '/dashboard';
+            }
+        </script>
+    </body>
+    </html>
+    '''
 
 @app.route('/dashboard')
 def dashboard():
-    """Web dashboard to view tracking data"""
-    try:
-        conn = sqlite3.connect('tracking_data.db')
-        c = conn.cursor()
-        c.execute('''SELECT * FROM tracking_logs ORDER BY created_at DESC LIMIT 100''')
-        logs = c.fetchall()
-        conn.close()
-        
-        # Convert to list of dictionaries
-        columns = ['id', 'session_id', 'ip_address', 'user_agent', 'browser', 'platform', 
-                  'language', 'screen', 'timezone', 'latitude', 'longitude', 'location_accuracy', 
-                  'event_type', 'timestamp', 'created_at']
-        
-        logs_data = []
-        for log in logs:
-            log_dict = dict(zip(columns, log))
-            logs_data.append(log_dict)
-        
-        dashboard_html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>IVNet Tracking Dashboard</title>
-            <style>
-                body { 
-                    font-family: Arial, sans-serif; 
-                    margin: 20px; 
-                    background: #f5f5f5;
-                }
-                .header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    margin-bottom: 20px;
-                    text-align: center;
-                }
-                .stats {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-                .stat-card {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    text-align: center;
-                }
-                .stat-value {
-                    font-size: 2em;
-                    font-weight: bold;
-                    color: #667eea;
-                }
-                .stat-label {
-                    color: #666;
-                    margin-top: 5px;
-                }
-                table { 
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    background: white;
-                    border-radius: 10px;
-                    overflow: hidden;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                }
-                th, td { 
-                    padding: 12px; 
-                    text-align: left; 
-                    border-bottom: 1px solid #ddd; 
-                }
-                th { 
-                    background: #667eea; 
-                    color: white; 
-                    font-weight: bold;
-                }
-                tr:hover { 
-                    background: #f8f9fa; 
-                }
-                .location-link {
-                    color: #667eea;
-                    text-decoration: none;
-                }
-                .location-link:hover {
-                    text-decoration: underline;
-                }
-                .refresh-btn {
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    margin-bottom: 20px;
-                }
-                .refresh-btn:hover {
-                    background: #5a6fd8;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>📍 IVNet Location Tracking Dashboard</h1>
-                <p>Real-time device tracking and monitoring</p>
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ivnet Dashboard</title>
+        <style>
+            body {{ 
+                font-family: Arial, sans-serif; 
+                max-width: 1000px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                color: white;
+            }}
+            .container {{
+                background: rgba(255, 255, 255, 0.1);
+                padding: 30px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+            }}
+            .location-item {{ 
+                border: 1px solid rgba(255, 255, 255, 0.2); 
+                margin: 15px 0; 
+                padding: 20px; 
+                border-radius: 10px; 
+                background: rgba(255, 255, 255, 0.1);
+            }}
+            button {{ 
+                padding: 12px 20px; 
+                margin: 5px; 
+                border: none; 
+                border-radius: 8px; 
+                cursor: pointer; 
+                background: linear-gradient(45deg, #007bff, #0056b3); 
+                color: white;
+                font-weight: bold;
+            }}
+            h1 {{ text-align: center; margin-bottom: 30px; }}
+            .button-container {{ text-align: center; margin-bottom: 30px; }}
+            .stats {{
+                display: flex;
+                justify-content: space-around;
+                margin: 20px 0;
+                flex-wrap: wrap;
+            }}
+            .stat-item {{
+                background: rgba(255, 255, 255, 0.1);
+                padding: 15px;
+                border-radius: 10px;
+                text-align: center;
+                margin: 5px;
+                min-width: 120px;
+            }}
+            .stat-number {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #ffd700;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📊 ivnet Location Dashboard</h1>
+            
+            <div class="button-container">
+                <button onclick="location.href='/tracker'">🔙 Back to Tracker</button>
+                <button onclick="location.reload()">🔄 Refresh</button>
             </div>
             
             <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-value">{{ total_logs }}</div>
-                    <div class="stat-label">Total Logs</div>
+                <div class="stat-item">
+                    <div class="stat-number">{len(location_data)}</div>
+                    <div>Total Locations</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ unique_sessions }}</div>
-                    <div class="stat-label">Unique Sessions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ unique_ips }}</div>
-                    <div class="stat-label">Unique IPs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ locations_count }}</div>
-                    <div class="stat-label">With Location</div>
+                <div class="stat-item">
+                    <div class="stat-number">{'Online' if len(location_data) >= 0 else 'Offline'}</div>
+                    <div>Server Status</div>
                 </div>
             </div>
             
-            <button class="refresh-btn" onclick="location.reload()">🔄 Refresh Data</button>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Session ID</th>
-                        <th>IP Address</th>
-                        <th>Browser</th>
-                        <th>Platform</th>
-                        <th>Location</th>
-                        <th>Event</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr>
-                        <td>{{ log.created_at }}</td>
-                        <td>{{ log.session_id[:8] }}...</td>
-                        <td>{{ log.ip_address }}</td>
-                        <td>{{ log.browser }}</td>
-                        <td>{{ log.platform }}</td>
-                        <td>
-                            {% if log.latitude and log.longitude %}
-                                <a href="https://www.google.com/maps?q={{ log.latitude }},{{ log.longitude }}" 
-                                   target="_blank" class="location-link">
-                                   {{ "%.6f"|format(log.latitude) }}, {{ "%.6f"|format(log.longitude) }}
-                                </a>
-                            {% else %}
-                                Not available
-                            {% endif %}
-                        </td>
-                        <td>{{ log.event_type }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            
-            <script>
-                // Auto-refresh every 30 seconds
-                setTimeout(() => location.reload(), 30000);
-            </script>
-        </body>
-        </html>
-        """
-        
-        # Calculate statistics
-        total_logs = len(logs_data)
-        unique_sessions = len(set(log['session_id'] for log in logs_data if log['session_id']))
-        unique_ips = len(set(log['ip_address'] for log in logs_data if log['ip_address']))
-        locations_count = len([log for log in logs_data if log['latitude'] and log['longitude']])
-        
-        from jinja2 import Template
-        template = Template(dashboard_html)
-        
-        return template.render(
-            logs=logs_data,
-            total_logs=total_logs,
-            unique_sessions=unique_sessions,
-            unique_ips=unique_ips,
-            locations_count=locations_count
-        )
-        
-    except Exception as e:
-        return f"Error loading dashboard: {str(e)}", 500
+            <div id="locationList">
+                {'<div style="text-align: center; padding: 40px; opacity: 0.8;">📍 No location data yet. Use the tracker to start collecting data!</div>' if len(location_data) == 0 else ''.join([f'''
+                <div class="location-item">
+                    <h3>📍 Track #{item.get('id', i+1)}</h3>
+                    <p><strong>📊 Coordinates:</strong> {item.get('latitude', 'Unknown')}, {item.get('longitude', 'Unknown')}</p>
+                    <p><strong>🕒 Time:</strong> {item.get('timestamp', 'Unknown')}</p>
+                    <p><strong>📱 Device:</strong> {item.get('platform', 'Unknown')}</p>
+                    <p><strong>🎯 Accuracy:</strong> {item.get('accuracy', 'Unknown')} meters</p>
+                    <p><strong>🔗 Maps:</strong> <a href="https://www.google.com/maps?q={item.get('latitude', 0)},{item.get('longitude', 0)}" target="_blank" style="color: #ffd700;">View on Google Maps</a></p>
+                </div>
+                ''' for i, item in enumerate(reversed(location_data))])}
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
 
-@app.route('/api/logs')
-def get_logs():
-    """API endpoint to get tracking logs"""
+@app.route('/api/location', methods=['POST'])
+def save_location():
     try:
-        conn = sqlite3.connect('tracking_data.db')
-        c = conn.cursor()
-        c.execute('''SELECT * FROM tracking_logs ORDER BY created_at DESC''')
-        logs = c.fetchall()
-        conn.close()
+        data = request.get_json()
         
-        columns = ['id', 'session_id', 'ip_address', 'user_agent', 'browser', 'platform', 
-                  'language', 'screen', 'timezone', 'latitude', 'longitude', 'location_accuracy', 
-                  'event_type', 'timestamp', 'created_at']
+        # Add server-side info
+        data['id'] = len(location_data) + 1
+        data['server_timestamp'] = datetime.now().isoformat()
+        data['ip_address'] = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'Unknown'))
         
-        logs_data = []
-        for log in logs:
-            log_dict = dict(zip(columns, log))
-            logs_data.append(log_dict)
+        # Store data
+        location_data.append(data)
         
-        return jsonify(logs_data)
+        # Print to console (will show in Vercel logs)
+        print(f"🔴 NEW LOCATION TRACKED:")
+        print(f"   📍 Coordinates: {data.get('latitude')}, {data.get('longitude')}")
+        print(f"   🕒 Time: {data.get('timestamp')}")
+        print(f"   📱 Device: {data.get('platform')}")
+        print(f"   🌐 IP: {data.get('ip_address')}")
+        print(f"   🆔 Session: {data.get('sessionId')}")
         
+        return jsonify({'status': 'success', 'id': data['id'], 'message': 'Location saved successfully!'})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Error saving location: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@app.route('/tracker')
-def serve_tracker():
-    """Serve the tracker HTML file directly"""
-    try:
-        with open('ivnet_location_tracker.html', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return "Tracker HTML file not found!", 404
+@app.route('/api/locations', methods=['GET'])
+def get_locations():
+    return jsonify(location_data)
 
-@app.route('/')
-def index():
-    return """
-    <h1>IVNet Location Tracker Server</h1>
-    <p>Server is running!</p>
-    <ul>
-        <li><a href="/tracker">📱 Open Tracker App</a></li>
-        <li><a href="/dashboard">📊 View Tracking Dashboard</a></li>
-        <li><a href="/api/logs">📋 View Raw Logs (JSON)</a></li>
-    </ul>
-    <p><strong>Share this link for tracking:</strong> <code>http://localhost:5000/tracker</code></p>
-    """
+@app.route('/api/clear', methods=['POST'])
+def clear_locations():
+    global location_data
+    location_data = []
+    return jsonify({'status': 'success', 'message': 'All data cleared'})
+
+# Test endpoint to check if server is working
+@app.route('/api/test')
+def test():
+    return jsonify({'status': 'online', 'message': 'Server is working!', 'timestamp': datetime.now().isoformat()})
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 5000))
-    print("🚀 Starting IVNet Location Tracker Server...")
-    print(f"📍 Server will be available at: http://localhost:{port}")
-    print("📊 Dashboard will be available at: /dashboard")
-    print("📝 Make sure to open ivnet_location_tracker.html in a web browser")
-    print("-" * 60)
-    
-    # Get local IP address
-    import socket
-    try:
-        hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
-        print(f"🌐 For phones/other devices, use: http://{local_ip}:{port}/tracker")
-    except:
-        pass
-    print("-" * 60)
-    
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True)
