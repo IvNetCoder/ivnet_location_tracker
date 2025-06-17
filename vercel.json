@@ -4,21 +4,9 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "ivnet_location_tracker.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/tracker",
-      "dest": "/ivnet_location_tracker.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
     {
       "src": "/(.*)",
       "dest": "/api/index.py"
