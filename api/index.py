@@ -14,13 +14,12 @@ tracker_html = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IvNet Location Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>ivnet Location Tracker</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#007bff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="IvNet Tracker">
+    <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -92,9 +91,8 @@ tracker_html = '''
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>🌍 IvNet Location Tracker</h1>
+<body>    <div class="container">
+        <h1>🌍 ivnet Location Tracker</h1>
         <p class="subtitle">Track device location and info securely</p>
         
         <div class="button-container">
@@ -258,8 +256,7 @@ dashboard_html = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IvNet Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>ivnet Dashboard</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#007bff">
     <style>
@@ -331,9 +328,8 @@ dashboard_html = '''
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>📊 IvNet Location Dashboard</h1>
+<body>    <div class="container">
+        <h1>📊 ivnet Location Dashboard</h1>
         
         <div class="button-container">
             <button onclick="location.href='/tracker'">🔙 Back to Tracker</button>
@@ -428,8 +424,7 @@ dashboard_html = '''
 def home():
     return '''
     <html>
-    <head>
-        <title>IvNet Location Tracker</title>
+    <head>        <title>ivnet Location Tracker</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             body { 
@@ -467,9 +462,8 @@ def home():
             }
         </style>
     </head>
-    <body>
-        <div class="container">
-            <h1>🌍 IvNet Location Tracker</h1>
+    <body>        <div class="container">
+            <h1>🌍 ivnet Location Tracker</h1>
             <p>Professional location tracking system</p>
             <div>
                 <a href="/tracker">📍 Start Tracking</a>
@@ -489,10 +483,9 @@ def dashboard():
     return render_template_string(dashboard_html)
 
 @app.route('/manifest.json')
-def manifest():
-    return {
-        "name": "IvNet Location Tracker",
-        "short_name": "IvNet Tracker",
+def manifest():    return {
+        "name": "ivnet Location Tracker",
+        "short_name": "ivnet Tracker",
         "description": "Track device location and info securely",
         "start_url": "/tracker",
         "display": "standalone",
