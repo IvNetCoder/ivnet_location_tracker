@@ -94,10 +94,10 @@ tracker_html = '''
 <body>    <div class="container">
         <h1>🌍 ivnet Location Tracker</h1>
         <p class="subtitle">Track device location and info securely</p>
-        
-        <div class="button-container">
+          <div class="button-container">
             <button onclick="getLocation()" class="primary">📍 Get My Location</button>
             <button onclick="viewDashboard()" class="secondary">📊 View Dashboard</button>
+            <button onclick="downloadData()" class="secondary">💾 Download Data</button>
             <button id="installButton" onclick="installApp()" class="install">📱 Install App</button>
         </div>
         
@@ -165,8 +165,7 @@ tracker_html = '''
                 }, 5000);
             }
         }
-        
-        function getLocation() {
+          function getLocation() {
             showStatus('🔍 Getting location...', 'info');
             
             if (!navigator.geolocation) {
@@ -183,8 +182,13 @@ tracker_html = '''
                         timestamp: new Date().toISOString(),
                         userAgent: navigator.userAgent,
                         platform: navigator.platform,
-                        language: navigator.language
+                        language: navigator.language,
+                        ipAddress: 'Will be detected by server',
+                        sessionId: generateSessionId()
                     };
+                    
+                    // Save to local storage
+                    saveToLocalStorage(data);
                     
                     // Display location info
                     document.getElementById('locationInfo').innerHTML = `
@@ -195,6 +199,7 @@ tracker_html = '''
                         <p><strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
                         <p><strong>Device:</strong> ${data.platform}</p>
                         <p><strong>Language:</strong> ${data.language}</p>
+                        <p><strong>Session:</strong> ${data.sessionId}</p>
                     `;
                     
                     // Send to server
@@ -205,11 +210,11 @@ tracker_html = '''
                     })
                     .then(response => response.json())
                     .then(result => {
-                        showStatus('✅ Location saved successfully! Check dashboard to view.', 'success');
+                        showStatus('✅ Location saved to server AND locally! Check dashboard or download data.', 'success');
                     })
                     .catch(error => {
-                        showStatus('⚠️ Location captured but server unavailable', 'error');
-                        console.error('Error:', error);
+                        showStatus('⚠️ Location saved locally (server offline). You can still download the data!', 'error');
+                        console.error('Server error:', error);
                     });
                 },
                 error => {
@@ -233,6 +238,38 @@ tracker_html = '''
                     maximumAge: 0
                 }
             );
+        }
+        
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function saveToLocalStorage(data) {
+            let savedData = JSON.parse(localStorage.getItem('ivnet_location_data') || '[]');
+            savedData.push(data);
+            localStorage.setItem('ivnet_location_data', JSON.stringify(savedData));
+        }
+        
+        function downloadData() {
+            let savedData = JSON.parse(localStorage.getItem('ivnet_location_data') || '[]');
+            
+            if (savedData.length === 0) {
+                showStatus('❌ No data to download. Track some locations first!', 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(savedData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ivnet_location_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showStatus(`✅ Downloaded ${savedData.length} location records!`, 'success');
         }
         
         function viewDashboard() {
