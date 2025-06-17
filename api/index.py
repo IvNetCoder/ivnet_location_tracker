@@ -17,8 +17,8 @@ tracker_html = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>ivnet Location Tracker</title>
+    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ivnet Location Tracker</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#007bff">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -92,10 +92,10 @@ tracker_html = '''
         .subtitle { text-align: center; margin-bottom: 30px; opacity: 0.9; }
         #installButton {
             display: none;
-        }
-    </style>
+        }    </style>
 </head>
-<body>    <div class="container">
+<body>
+    <div class="container">
         <h1>🌍 ivnet Location Tracker</h1>
         <p class="subtitle">Track device location and info securely</p>
           <div class="button-container">
@@ -754,3 +754,10 @@ def clear_locations():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+# Vercel serverless function handler
+def handler(request):
+    return app(request.environ, request.start_response)
+
+# Export the Flask app for Vercel
+application = app
