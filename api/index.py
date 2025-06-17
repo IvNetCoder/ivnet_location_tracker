@@ -625,9 +625,9 @@ def send_email_notification(data):
     
     try:
         # Configure these with your email settings
-        SENDER_EMAIL = "your-email@gmail.com"  # Change this
-        SENDER_PASSWORD = "your-app-password"   # Change this
-        RECEIVER_EMAIL = "your-email@gmail.com" # Change this
+        SENDER_EMAIL = "ivan.yochev2001@gmail.com"  # Change this
+        SENDER_PASSWORD = "wkwo tfgq ehbc oxkc"   # Change this
+        RECEIVER_EMAIL = "ivan.yochev2010@gmail.com" # Change this
         
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
