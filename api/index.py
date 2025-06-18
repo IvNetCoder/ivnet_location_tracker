@@ -65,17 +65,19 @@ def manifest():
         "background_color": "#667eea",
         "theme_color": "#764ba2",
         "orientation": "portrait",
+        "scope": "/",
+        "categories": ["utilities", "productivity"],
         "icons": [
             {
-                "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E📍%3C/text%3E%3C/svg%3E",
                 "sizes": "192x192",
-                "type": "image/png",
+                "type": "image/svg+xml",
                 "purpose": "any maskable"
             },
             {
-                "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E📍%3C/text%3E%3C/svg%3E",
                 "sizes": "512x512",
-                "type": "image/png",
+                "type": "image/svg+xml",
                 "purpose": "any maskable"
             }
         ]
@@ -127,22 +129,34 @@ def tracker():
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
     </head>    <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: white;">
         <!-- PWA Install Prompt (Mobile Only) -->
-        <div id="installPrompt" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 15px; text-align: center; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-            <div style="display: flex; align-items: center; justify-content: space-between; max-width: 800px; margin: 0 auto;">
-                <div style="flex: 1;">
-                    <strong>📱 Install ivnet Tracker</strong><br>
-                    <small>Add to home screen for faster access!</small>
+        <div id="installPrompt" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 20px; text-align: center; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-bottom: 3px solid #fff;">
+            <div style="display: flex; align-items: center; justify-content: space-between; max-width: 800px; margin: 0 auto; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px; margin-bottom: 10px;">
+                    <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">📱 Install ivnet Tracker</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Add to home screen for instant access!</div>
                 </div>
-                <div>
-                    <button onclick="installApp()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 5px; margin: 0 5px; cursor: pointer; font-weight: bold;">Install</button>
-                    <button onclick="dismissInstall()" style="background: transparent; border: 1px solid white; color: white; padding: 8px 10px; border-radius: 5px; cursor: pointer;">✕</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="installApp()" style="background: rgba(255,255,255,0.9); border: none; color: #28a745; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">📲 Install</button>
+                    <button onclick="dismissInstall()" style="background: transparent; border: 2px solid white; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">✕</button>
                 </div>
             </div>
+        </div>
+
+        <!-- Debug Console (only visible if needed) -->
+        <div id="debugConsole" style="display: none; position: fixed; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; z-index: 999;">
+            <div style="color: white; font-weight: bold; margin-bottom: 5px;">Debug Console: <button onclick="clearDebug()" style="float: right; background: #ff4444; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 10px;">Clear</button></div>
+            <div id="debugContent"></div>
         </div>
 
         <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin-top: 20px;">
             <h1 style="text-align: center;">🌍 ivnet Location Tracker</h1>
             <p style="text-align: center; opacity: 0.9;">Track device location and info securely</p>
+            
+            <!-- Debug Button (for testing) -->
+            <div style="text-align: center; margin: 10px 0;">
+                <button onclick="toggleDebug()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7;">🔍 Debug</button>
+                <button onclick="forceShowInstall()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7; margin-left: 5px;">📱 Test Install</button>
+            </div>
             
             <div style="text-align: center; margin: 20px 0;">
                 <button onclick="getLocation()" style="padding: 15px 25px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; background: linear-gradient(45deg, #007bff, #0056b3); color: white;">📍 Get My Location</button>
@@ -151,7 +165,7 @@ def tracker():
             
             <div id="status"></div>
             <div id="locationInfo"></div>
-        </div>        
+        </div>
         <script>
             // PWA Install Functionality
             let deferredPrompt;
@@ -160,55 +174,86 @@ def tracker():
             // Register Service Worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('SW registered'))
-                    .catch(error => console.log('SW registration failed'));
+                    .then(registration => console.log('SW registered:', registration))
+                    .catch(error => console.log('SW registration failed:', error));
             }
 
             // Detect mobile devices (Android/iOS)
             function isMobileDevice() {
                 const userAgent = navigator.userAgent.toLowerCase();
                 const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                   window.navigator.standalone === true ||
+                                   document.referrer.includes('android-app://');
+                console.log('Mobile check - isMobile:', isMobile, 'isStandalone:', isStandalone);
                 return isMobile && !isStandalone;
             }
 
             // Listen for PWA install prompt
             window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt fired');
                 e.preventDefault();
                 deferredPrompt = e;
                 
                 // Show install prompt only on mobile devices
                 if (isMobileDevice() && !installPromptShown) {
-                    showInstallPrompt();
+                    setTimeout(() => showInstallPrompt(), 1000);
                 }
             });
 
             // Show install prompt
             function showInstallPrompt() {
-                if (isMobileDevice()) {
+                console.log('Showing install prompt');
+                if (isMobileDevice() || deferredPrompt) {
                     document.getElementById('installPrompt').style.display = 'block';
                     installPromptShown = true;
                 }
             }
 
             // Install app
-            function installApp() {
+            async function installApp() {
+                console.log('Install button clicked, deferredPrompt:', !!deferredPrompt);
+                
                 if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
+                    try {
+                        // Show the install prompt
+                        deferredPrompt.prompt();
+                        
+                        // Wait for the user to respond to the prompt
+                        const choiceResult = await deferredPrompt.userChoice;
+                        console.log('User choice:', choiceResult.outcome);
+                        
                         if (choiceResult.outcome === 'accepted') {
                             console.log('User accepted the install prompt');
+                            // Hide the custom install prompt
+                            dismissInstall();
+                        } else {
+                            console.log('User dismissed the install prompt');
                         }
+                        
+                        // Clear the deferredPrompt variable
                         deferredPrompt = null;
-                        dismissInstall();
-                    });
-                } else {
-                    // Fallback for iOS Safari
-                    if (/iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
-                        alert('To install this app on iOS:\\n1. Tap the Share button (↗️)\\n2. Select "Add to Home Screen"\\n3. Tap "Add"');
+                    } catch (error) {
+                        console.error('Error during installation:', error);
+                        // Show iOS instructions as fallback
+                        showIOSInstructions();
                     }
-                    dismissInstall();
+                } else {
+                    // Fallback for iOS Safari or browsers that don't support PWA install
+                    showIOSInstructions();
                 }
+            }
+
+            // Show iOS install instructions
+            function showIOSInstructions() {
+                if (/iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
+                    alert('To install this app on iOS:\\n\\n1. Tap the Share button (⬆️) in Safari\\n2. Scroll down and select "Add to Home Screen"\\n3. Tap "Add" to install\\n\\nThe app will appear on your home screen!');
+                } else if (/android/i.test(navigator.userAgent.toLowerCase())) {
+                    alert('To install this app:\\n\\n1. Open Chrome browser settings (⋮)\\n2. Select "Add to Home Screen"\\n3. Tap "Add"\\n\\nOr try refreshing the page for the install prompt!');
+                } else {
+                    alert('This browser doesn\\'t support app installation.\\nTry using Chrome on Android or Safari on iOS!');
+                }
+                dismissInstall();
             }
 
             // Dismiss install prompt
@@ -218,19 +263,76 @@ def tracker():
                 sessionStorage.setItem('installPromptDismissed', 'true');
             }
 
+            // Force show install prompt for testing
+            function forceShowInstall() {
+                sessionStorage.removeItem('installPromptDismissed');
+                installPromptShown = false;
+                showInstallPrompt();
+            }
+
             // Check if prompt was already dismissed this session
             window.addEventListener('load', () => {
+                console.log('Page loaded, checking install conditions...');
+                
                 if (sessionStorage.getItem('installPromptDismissed')) {
+                    console.log('Install prompt was dismissed this session');
                     return;
                 }
                 
-                // Show prompt after 3 seconds if mobile and not installed
+                // Show prompt after 2 seconds if mobile and not installed
                 setTimeout(() => {
-                    if (isMobileDevice() && !deferredPrompt && !installPromptShown) {
+                    if (isMobileDevice() && !installPromptShown) {
+                        console.log('No beforeinstallprompt yet, showing manual prompt');
                         showInstallPrompt();
                     }
-                }, 3000);
+                }, 2000);
+            });            // Add double-tap to show install prompt (for testing)
+            let tapCount = 0;
+            document.addEventListener('click', () => {
+                tapCount++;
+                setTimeout(() => tapCount = 0, 500);
+                if (tapCount === 3) {
+                    debugLog('Triple tap detected - forcing install prompt');
+                    forceShowInstall();
+                }
             });
+
+            // Debug functions
+            function debugLog(message) {
+                console.log(message);
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    debugContent.innerHTML += `[${timestamp}] ${message}<br>`;
+                    debugContent.scrollTop = debugContent.scrollHeight;
+                }
+            }
+
+            function toggleDebug() {
+                const debugConsole = document.getElementById('debugConsole');
+                if (debugConsole.style.display === 'none') {
+                    debugConsole.style.display = 'block';
+                    debugLog('Debug console opened');
+                    debugLog('User Agent: ' + navigator.userAgent);
+                    debugLog('Is Mobile: ' + isMobileDevice());
+                    debugLog('Has deferredPrompt: ' + !!deferredPrompt);
+                    debugLog('Install prompt shown: ' + installPromptShown);
+                    debugLog('Service Worker support: ' + ('serviceWorker' in navigator));
+                } else {
+                    debugConsole.style.display = 'none';
+                }
+            }
+
+            function clearDebug() {
+                document.getElementById('debugContent').innerHTML = '';
+            }
+
+            // Override console.log to show in debug console
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                debugLog(args.join(' '));
+            };
 
             // Location tracking function
             function getLocation() {
