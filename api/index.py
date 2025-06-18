@@ -185,10 +185,11 @@ def tracker():
                 <button onclick="toggleDebug()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7;">🔍 Debug</button>
                 <button onclick="forceShowInstall()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7; margin-left: 5px;">📱 Test Install</button>
             </div>
-            
-            <div style="text-align: center; margin: 20px 0;">
+              <div style="text-align: center; margin: 20px 0;">
                 <button onclick="getLocation()" style="padding: 15px 25px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; background: linear-gradient(45deg, #007bff, #0056b3); color: white;">📍 Get My Location</button>
                 <button onclick="location.href='/dashboard'" style="padding: 15px 25px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; background: linear-gradient(45deg, #6c757d, #545b62); color: white;">📊 View Dashboard</button>
+                <br>
+                <button onclick="testButton()" style="padding: 8px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.2); color: white;">🧪 Test Button</button>
             </div>
             
             <div id="status"></div>
@@ -430,12 +431,12 @@ def tracker():
                     }
                 }
                 return 'unknown';
-            }
-
-            // Location tracking function with enhanced error handling
-            async function getLocation() {
-                debugLog('getLocation() called');
-                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Checking location access...</div>';
+            }            // Location tracking function with enhanced error handling
+            function getLocation() {
+                debugLog('getLocation() called - button clicked successfully');
+                
+                // Immediate feedback that button was clicked
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">� Button clicked! Checking location access...</div>';
                 
                 // Check if geolocation is supported
                 if (!navigator.geolocation) {
@@ -453,37 +454,26 @@ def tracker():
                     return;
                 }
 
-                // Check permission status first
-                const permissionStatus = await checkLocationPermission();
-                if (permissionStatus === 'denied') {
-                    const deniedMsg = '❌ Location access denied. Please enable location access in your browser settings and refresh the page.';
-                    debugLog('Location permission denied');
-                    document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">${deniedMsg}</div>`;
-                    return;
-                }
-
-                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Getting location...</div>';
+                debugLog('All checks passed, requesting location...');
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Requesting location permission...</div>';
                 
-                // Enhanced geolocation options for better accuracy and timeout
+                // Simple geolocation options
                 const options = {
                     enableHighAccuracy: true,
-                    timeout: 10000, // 10 seconds timeout
-                    maximumAge: 300000 // 5 minutes cache
+                    timeout: 15000, // 15 seconds timeout
+                    maximumAge: 60000 // 1 minute cache
                 };
 
-                debugLog('Requesting location with options:', JSON.stringify(options));
+                debugLog('Calling navigator.geolocation.getCurrentPosition with options:', options);
                 
                 navigator.geolocation.getCurrentPosition(
-                    position => {
-                        debugLog('Location success:', position.coords.latitude, position.coords.longitude);
+                    function(position) {
+                        debugLog('✅ Location success received!');
                         const data = {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                             accuracy: position.coords.accuracy,
                             altitude: position.coords.altitude,
-                            altitudeAccuracy: position.coords.altitudeAccuracy,
-                            heading: position.coords.heading,
-                            speed: position.coords.speed,
                             timestamp: new Date().toISOString(),
                             userAgent: navigator.userAgent,
                             platform: navigator.platform,
@@ -491,20 +481,21 @@ def tracker():
                             host: location.host
                         };
                         
+                        debugLog('Location data:', JSON.stringify(data, null, 2));
+                        
                         document.getElementById('locationInfo').innerHTML = `
                             <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
                                 <h3>📍 Location Captured Successfully!</h3>
                                 <p><strong>Latitude:</strong> ${data.latitude.toFixed(6)}</p>
                                 <p><strong>Longitude:</strong> ${data.longitude.toFixed(6)}</p>
                                 <p><strong>Accuracy:</strong> ${data.accuracy ? Math.round(data.accuracy) + ' meters' : 'Unknown'}</p>
-                                <p><strong>Altitude:</strong> ${data.altitude ? Math.round(data.altitude) + ' meters' : 'Unknown'}</p>
-                                <p><strong>Speed:</strong> ${data.speed ? Math.round(data.speed) + ' m/s' : 'Unknown'}</p>
                                 <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-                                <p><strong>Device:</strong> ${data.platform}</p>
                                 <p><strong>Protocol:</strong> ${data.protocol}</p>
                                 <p><strong>🗺️ Maps:</strong> <a href="https://www.google.com/maps?q=${data.latitude},${data.longitude}" target="_blank" style="color: #ffd700;">View on Google Maps</a></p>
                             </div>
                         `;
+                        
+                        document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location captured! Saving to server...</div>';
                         
                         // Save to server
                         fetch('/save', {
@@ -515,60 +506,45 @@ def tracker():
                         .then(response => response.json())
                         .then(result => {
                             debugLog('Save result:', result);
-                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location saved successfully! Server ONLINE!</div>';
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location saved successfully!</div>';
                         })
                         .catch(error => {
                             debugLog('Save error:', error);
-                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">⚠️ Server error - but location was captured</div>';
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(255, 193, 7, 0.8);">⚠️ Location captured but server error</div>';
                         });
                     },
-                    error => {
+                    function(error) {
+                        debugLog('❌ Location error received:', error.code, error.message);
+                        
                         let errorMessage = '❌ Unknown location error';
-                        let debugMessage = `Location error: ${error.code} - ${error.message}`;
+                        let helpText = '';
                         
                         switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = '❌ Location access denied. Please enable location access in your browser settings and try again.';
-                                debugMessage += ' - User denied the request for Geolocation';
+                            case 1: // PERMISSION_DENIED
+                                errorMessage = '❌ Location access denied';
+                                helpText = '<br><small style="display: block; margin-top: 10px; line-height: 1.4;"><strong>To enable location:</strong><br>1. Tap the 🔒 lock icon in address bar<br>2. Set Location to "Allow"<br>3. Refresh this page</small>';
                                 break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = '❌ Location information unavailable. Please check your GPS/network connection.';
-                                debugMessage += ' - Location information is unavailable';
+                            case 2: // POSITION_UNAVAILABLE
+                                errorMessage = '❌ Location unavailable';
+                                helpText = '<br><small style="display: block; margin-top: 10px;">Please check your GPS and internet connection</small>';
                                 break;
-                            case error.TIMEOUT:
-                                errorMessage = '❌ Location request timed out. Please try again.';
-                                debugMessage += ' - Request to get user location timed out';
+                            case 3: // TIMEOUT
+                                errorMessage = '❌ Location request timed out';
+                                helpText = '<br><small style="display: block; margin-top: 10px;">Please try again</small>';
                                 break;
                         }
                         
-                        debugLog(debugMessage);
-                        document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">${errorMessage}</div>`;
-                        
-                        // Show additional help for mobile users
-                        if (isMobileDevice()) {
-                            document.getElementById('locationInfo').innerHTML = `
-                                <div style="margin: 20px 0; padding: 20px; background: rgba(255,193,7,0.2); border-radius: 10px; border-left: 4px solid #ffc107;">
-                                    <h4>📱 Mobile Location Help:</h4>
-                                    <p><strong>For Android Chrome:</strong></p>
-                                    <ul style="text-align: left;">
-                                        <li>Tap the 🔒 lock icon in the address bar</li>
-                                        <li>Set Location to "Allow"</li>
-                                        <li>Refresh the page and try again</li>
-                                    </ul>
-                                    <p><strong>For iPhone Safari:</strong></p>
-                                    <ul style="text-align: left;">
-                                        <li>Go to Settings → Privacy & Security → Location Services</li>
-                                        <li>Enable Location Services</li>
-                                        <li>Scroll to Safari and set to "While Using App"</li>
-                                        <li>Return to this page and try again</li>
-                                    </ul>
-                                    <p><strong>Make sure:</strong> GPS is enabled and you have internet connection</p>
-                                </div>
-                            `;
-                        }
+                        document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">${errorMessage}${helpText}</div>`;
                     },
                     options
                 );
+            }
+
+            // Test function to verify JavaScript is working
+            function testButton() {
+                debugLog('🧪 Test button clicked - JavaScript is working!');
+                alert('Test button works! JavaScript is functioning.');
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">🧪 Test button clicked - JavaScript working!</div>';
             }
         </script>
     </body>
