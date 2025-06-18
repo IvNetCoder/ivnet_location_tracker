@@ -1,7 +1,28 @@
-from flask import Flask
+from flask import Flask, request, redirect
 import json
 
 app = Flask(__name__)
+
+# Add security headers for location access
+@app.before_request
+def force_https():
+    # Force HTTPS for location access (except localhost)
+    if not request.is_secure and request.host != 'localhost:5000' and request.host != '127.0.0.1:5000':
+        return redirect(request.url.replace('http://', 'https://'), code=301)
+
+@app.after_request
+def after_request(response):
+    # Enable location access for HTTPS
+    response.headers['Permissions-Policy'] = 'geolocation=(self)'
+    # Security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # CORS headers if needed
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 # Simple in-memory storage
 locations = []
@@ -128,6 +149,10 @@ def tracker():
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
+        <!-- Enhanced location permissions and security -->
+        <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
+        <meta name="mobile-web-capable" content="yes">
+        <meta http-equiv="Feature-Policy" content="geolocation 'self'">
         <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='90' font-size='90'%3E🪐%3C/text%3E%3C/svg%3E">
     </head>
     <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 100vh; color: white;">
@@ -271,11 +296,12 @@ def tracker():
                 sessionStorage.removeItem('installPromptDismissed');
                 installPromptShown = false;
                 showInstallPrompt();
-            }
-
-            // Check if prompt was already dismissed this session
+            }            // Check if prompt was already dismissed this session
             window.addEventListener('load', () => {
                 console.log('Page loaded, checking install conditions...');
+                
+                // Check location access on page load
+                checkLocationAccessOnLoad();
                 
                 if (sessionStorage.getItem('installPromptDismissed')) {
                     console.log('Install prompt was dismissed this session');
@@ -290,6 +316,60 @@ def tracker():
                     }
                 }, 2000);
             });
+
+            // Check location access when page loads
+            async function checkLocationAccessOnLoad() {
+                debugLog('Checking location access on page load...');
+                
+                // Check HTTPS
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(255, 193, 7, 0.8);">⚠️ For location access, please use: <a href="https://web.ivnet.me" style="color: white; text-decoration: underline;">https://web.ivnet.me</a></div>';
+                    return;
+                }
+
+                // Check geolocation support
+                if (!navigator.geolocation) {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ This browser doesn\'t support location access</div>';
+                    return;
+                }
+
+                // Check permission status
+                const permissionStatus = await checkLocationPermission();
+                debugLog(`Initial location permission: ${permissionStatus}`);
+                
+                if (permissionStatus === 'granted') {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location access granted! Ready to track.</div>';
+                } else if (permissionStatus === 'denied') {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ Location access denied. Please enable location in browser settings.</div>';
+                    showLocationHelp();
+                } else {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">📍 Click "Get My Location" to enable location access</div>';
+                }
+            }
+
+            // Show location help
+            function showLocationHelp() {
+                if (isMobileDevice()) {
+                    document.getElementById('locationInfo').innerHTML = `
+                        <div style="margin: 20px 0; padding: 20px; background: rgba(255,193,7,0.2); border-radius: 10px; border-left: 4px solid #ffc107;">
+                            <h4>📱 Enable Location Access:</h4>
+                            <p><strong>Android Chrome:</strong></p>
+                            <ul style="text-align: left;">
+                                <li>Tap the 🔒 icon in address bar</li>
+                                <li>Set Location to "Allow"</li>
+                                <li>Refresh this page</li>
+                            </ul>
+                            <p><strong>iPhone Safari:</strong></p>
+                            <ul style="text-align: left;">
+                                <li>Settings → Privacy → Location Services</li>
+                                <li>Turn on Location Services</li>
+                                <li>Scroll to Safari → "While Using App"</li>
+                                <li>Return here and refresh</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
 
             // Add double-tap to show install prompt (for testing)
             let tapCount = 0;
@@ -337,55 +417,157 @@ def tracker():
             console.log = function(...args) {
                 originalLog.apply(console, args);
                 debugLog(args.join(' '));
-            };
+            };            // Check location permission status
+            async function checkLocationPermission() {
+                if ('permissions' in navigator) {
+                    try {
+                        const permission = await navigator.permissions.query({name: 'geolocation'});
+                        debugLog(`Location permission status: ${permission.state}`);
+                        return permission.state;
+                    } catch (e) {
+                        debugLog('Permissions API not available');
+                        return 'unknown';
+                    }
+                }
+                return 'unknown';
+            }
 
-            // Location tracking function
-            function getLocation() {
-                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Getting location...</div>';
+            // Location tracking function with enhanced error handling
+            async function getLocation() {
+                debugLog('getLocation() called');
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Checking location access...</div>';
                 
+                // Check if geolocation is supported
                 if (!navigator.geolocation) {
+                    const errorMsg = 'Geolocation is not supported by this browser';
+                    debugLog(errorMsg);
                     document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ Geolocation not supported</div>';
                     return;
                 }
+
+                // Check HTTPS requirement
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    const httpsWarning = '⚠️ Location access requires HTTPS. Please use https://web.ivnet.me';
+                    debugLog('HTTPS required for location access');
+                    document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(255, 193, 7, 0.8);">${httpsWarning}</div>`;
+                    return;
+                }
+
+                // Check permission status first
+                const permissionStatus = await checkLocationPermission();
+                if (permissionStatus === 'denied') {
+                    const deniedMsg = '❌ Location access denied. Please enable location access in your browser settings and refresh the page.';
+                    debugLog('Location permission denied');
+                    document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">${deniedMsg}</div>`;
+                    return;
+                }
+
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Getting location...</div>';
+                
+                // Enhanced geolocation options for better accuracy and timeout
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // 10 seconds timeout
+                    maximumAge: 300000 // 5 minutes cache
+                };
+
+                debugLog('Requesting location with options:', JSON.stringify(options));
                 
                 navigator.geolocation.getCurrentPosition(
                     position => {
+                        debugLog('Location success:', position.coords.latitude, position.coords.longitude);
                         const data = {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                             accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            altitudeAccuracy: position.coords.altitudeAccuracy,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed,
                             timestamp: new Date().toISOString(),
                             userAgent: navigator.userAgent,
-                            platform: navigator.platform
+                            platform: navigator.platform,
+                            protocol: location.protocol,
+                            host: location.host
                         };
                         
                         document.getElementById('locationInfo').innerHTML = `
                             <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-                                <h3>📍 Location Captured:</h3>
+                                <h3>📍 Location Captured Successfully!</h3>
                                 <p><strong>Latitude:</strong> ${data.latitude.toFixed(6)}</p>
                                 <p><strong>Longitude:</strong> ${data.longitude.toFixed(6)}</p>
-                                <p><strong>Accuracy:</strong> ${data.accuracy} meters</p>
+                                <p><strong>Accuracy:</strong> ${data.accuracy ? Math.round(data.accuracy) + ' meters' : 'Unknown'}</p>
+                                <p><strong>Altitude:</strong> ${data.altitude ? Math.round(data.altitude) + ' meters' : 'Unknown'}</p>
+                                <p><strong>Speed:</strong> ${data.speed ? Math.round(data.speed) + ' m/s' : 'Unknown'}</p>
                                 <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
                                 <p><strong>Device:</strong> ${data.platform}</p>
+                                <p><strong>Protocol:</strong> ${data.protocol}</p>
                                 <p><strong>🗺️ Maps:</strong> <a href="https://www.google.com/maps?q=${data.latitude},${data.longitude}" target="_blank" style="color: #ffd700;">View on Google Maps</a></p>
                             </div>
                         `;
                         
+                        // Save to server
                         fetch('/save', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify(data)
                         })
-                        .then(() => {
-                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location saved! Server ONLINE!</div>';
+                        .then(response => response.json())
+                        .then(result => {
+                            debugLog('Save result:', result);
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location saved successfully! Server ONLINE!</div>';
                         })
-                        .catch(() => {
-                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">⚠️ Server error</div>';
+                        .catch(error => {
+                            debugLog('Save error:', error);
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">⚠️ Server error - but location was captured</div>';
                         });
                     },
                     error => {
-                        document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ Location access denied</div>';
-                    }
+                        let errorMessage = '❌ Unknown location error';
+                        let debugMessage = `Location error: ${error.code} - ${error.message}`;
+                        
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = '❌ Location access denied. Please enable location access in your browser settings and try again.';
+                                debugMessage += ' - User denied the request for Geolocation';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = '❌ Location information unavailable. Please check your GPS/network connection.';
+                                debugMessage += ' - Location information is unavailable';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = '❌ Location request timed out. Please try again.';
+                                debugMessage += ' - Request to get user location timed out';
+                                break;
+                        }
+                        
+                        debugLog(debugMessage);
+                        document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">${errorMessage}</div>`;
+                        
+                        // Show additional help for mobile users
+                        if (isMobileDevice()) {
+                            document.getElementById('locationInfo').innerHTML = `
+                                <div style="margin: 20px 0; padding: 20px; background: rgba(255,193,7,0.2); border-radius: 10px; border-left: 4px solid #ffc107;">
+                                    <h4>📱 Mobile Location Help:</h4>
+                                    <p><strong>For Android Chrome:</strong></p>
+                                    <ul style="text-align: left;">
+                                        <li>Tap the 🔒 lock icon in the address bar</li>
+                                        <li>Set Location to "Allow"</li>
+                                        <li>Refresh the page and try again</li>
+                                    </ul>
+                                    <p><strong>For iPhone Safari:</strong></p>
+                                    <ul style="text-align: left;">
+                                        <li>Go to Settings → Privacy & Security → Location Services</li>
+                                        <li>Enable Location Services</li>
+                                        <li>Scroll to Safari and set to "While Using App"</li>
+                                        <li>Return to this page and try again</li>
+                                    </ul>
+                                    <p><strong>Make sure:</strong> GPS is enabled and you have internet connection</p>
+                                </div>
+                            `;
+                        }
+                    },
+                    options
                 );
             }
         </script>
@@ -442,16 +624,80 @@ def dashboard():
 @app.route('/save', methods=['POST'])
 def save():
     try:
-        from flask import request
         data = request.get_json()
-        locations.append(data)
-        return {"status": "success"}
-    except:
-        return {"status": "error"}
+        if data:
+            # Add server timestamp
+            import datetime
+            data['server_timestamp'] = datetime.datetime.now().isoformat()
+            locations.append(data)
+            print(f"Location saved: {data.get('latitude', 'Unknown')}, {data.get('longitude', 'Unknown')}")
+            return {"status": "success", "message": "Location saved successfully", "total_locations": len(locations)}
+        else:
+            return {"status": "error", "message": "No data received"}, 400
+    except Exception as e:
+        print(f"Error saving location: {str(e)}")
+        return {"status": "error", "message": str(e)}, 500
 
 @app.route('/test')
 def test():
-    return {"status": "online", "locations": len(locations)}
+    return {"status": "online", "locations": len(locations), "protocol_required": "https", "current_protocol": request.scheme}
+
+@app.route('/location-test')
+def location_test():
+    """Simple page for testing location access"""
+    return '''
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Location Test - ivnet</title>
+        <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
+    </head>
+    <body style="font-family: Arial; padding: 20px; background: #f0f0f0;">
+        <h1>Location Access Test</h1>
+        <button onclick="testLocation()" style="padding: 15px 25px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Test Location Access</button>
+        <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 5px;"></div>
+        
+        <script>
+            function testLocation() {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = 'Testing location access...';
+                resultDiv.style.background = '#fff3cd';
+                
+                if (!navigator.geolocation) {
+                    resultDiv.innerHTML = '❌ Geolocation not supported';
+                    resultDiv.style.background = '#f8d7da';
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        resultDiv.innerHTML = `✅ Location access working!<br>
+                            Lat: ${position.coords.latitude.toFixed(6)}<br>
+                            Lng: ${position.coords.longitude.toFixed(6)}<br>
+                            Accuracy: ${position.coords.accuracy}m<br>
+                            Protocol: ${location.protocol}`;
+                        resultDiv.style.background = '#d4edda';
+                    },
+                    error => {
+                        let msg = '❌ Location access failed: ';
+                        switch(error.code) {
+                            case 1: msg += 'Permission denied'; break;
+                            case 2: msg += 'Position unavailable'; break;
+                            case 3: msg += 'Timeout'; break;
+                            default: msg += 'Unknown error';
+                        }
+                        msg += `<br>Protocol: ${location.protocol}`;
+                        resultDiv.innerHTML = msg;
+                        resultDiv.style.background = '#f8d7da';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        </script>
+    </body>
+    </html>
+    '''
 
 if __name__ == '__main__':
     app.run()
