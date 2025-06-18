@@ -2,21 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ivnet Location Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>🪐 ivnet Location Tracker</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='90' font-size='90'%3E🪐%3C/text%3E%3C/svg%3E">
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#495057">
     <meta name="description" content="IVNet Location Tracking Service">
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSVZOZXQgVHJhY2tlciIsInNob3J0X25hbWUiOiJJVk5ldCIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjNjY3ZWVhIiwidGhlbWVfY29sb3IiOiIjNjY3ZWVhIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeE1qZ2lJSGh0Ykc1elBTSm9kSFJ3T2k4dmQzZDNMbmN6TG05eVp5OHlNREF3TDNOMlp5SS9QaEJ3WVhSb0lHUTlJazB5TkRBeU1EQTJMRFU0TVRnM0lESXpNaUF5TURBeUlERTJPQ0F5TURBeUlERXhNaUF5TURBeUlERXhNaUF5TkRNeUlERTJPQ0F5TkRNeUlERTJPQ0F5TkRBeUlGb2lJR1pwYkd3OUlpTTJOamRsWldFaUx6NG9QQzlrWldaelBqNG9QSGRuSWk4K1BIZHRJRzl1VUhKdmNHMWxjblI1UVdOaFptNVRaa0ZvWWtKQlVsQkROZ0JCVVhSQlFVRkJRVUZCUVdZelduSTVRM0JuWW01VE1VZGhNRUk5TURBaUlHWnBiR3c5SWlNM05qUmlZVElpTHo0OEwzTjJaejQ9IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwiLCJzaXplcyI6IjEyOHgxMjgifV19">
     
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTI0IDIwQzI0IDEyIDMwIDYgMzggNkM0NiA2IDUyIDEyIDUyIDIwVjEwNEM1MiAxMTIgNDYgMTE4IDM4IDExOEMzMCAxMTggMjQgMTEyIDI0IDEwNFoiIGZpbGw9IiM2NjdlZWEiLz48L3N2Zz4=">
     
-    <style>
-        body {
+    <style>        body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             margin: 0;
             padding: 20px;
             min-height: 100vh;
@@ -35,10 +36,9 @@
             max-width: 400px;
             width: 100%;
         }
-        
-        .logo {
+          .logo {
             font-size: 2.5em;
-            color: #667eea;
+            color: #495057;
             margin-bottom: 10px;
             font-weight: bold;
         }
@@ -85,7 +85,7 @@
             background: #f8f9fa;
             padding: 10px;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #495057;
         }
         
         .info-label {
@@ -98,9 +98,8 @@
             font-weight: bold;
             color: #333;
         }
-        
-        .btn {
-            background: #667eea;
+          .btn {
+            background: #495057;
             color: white;
             border: none;
             padding: 12px 30px;
@@ -112,7 +111,7 @@
         }
         
         .btn:hover {
-            background: #5a6fd8;
+            background: #6c757d;
         }
           .hidden {
             display: none;
@@ -172,10 +171,9 @@
             font-weight: bold;
             transition: all 0.3s;
         }
-        
-        .install-btn.primary {
+          .install-btn.primary {
             background: white;
-            color: #ff6b6b;
+            color: #495057;
         }
         
         .install-btn.primary:hover {
@@ -203,13 +201,12 @@
                 opacity: 1;
             }
         }
-        
-        /* PWA Install Badge */
+          /* PWA Install Badge */
         .pwa-badge {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #667eea;
+            background: #495057;
             color: white;
             padding: 8px 15px;
             border-radius: 20px;
@@ -252,7 +249,7 @@
     </div>
 
     <div class="container">
-        <div class="logo">📍 ivnet</div>
+        <div class="logo">🪐 ivnet</div>
         <div class="subtitle">Location Tracking Service</div>
         
         <div id="status" class="status loading">
