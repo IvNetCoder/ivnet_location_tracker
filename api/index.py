@@ -12,17 +12,15 @@ def home():
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ivnet Location Tracker</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">        <title>ivnet Location Tracker</title>
         <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#764ba2">
+        <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
-    </head>
-    <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-height: 100vh; margin: 0;">
+    </head>    <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; min-height: 100vh; margin: 0;">
         <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 500px; margin: 0 auto;">
-            <h1>🌍 ivnet Location Tracker</h1>
+            <h1>🪐 ivnet Location Tracker</h1>
             <p>Professional location tracking system</p>
             <a href="/tracker" style="color: #ffd700; text-decoration: none; font-size: 18px; margin: 10px; display: inline-block; padding: 10px 20px; border: 2px solid #ffd700; border-radius: 8px;">📍 Start Tracking</a>
             <a href="/dashboard" style="color: #ffd700; text-decoration: none; font-size: 18px; margin: 10px; display: inline-block; padding: 10px 20px; border: 2px solid #ffd700; border-radius: 8px;">📊 View Dashboard</a>
@@ -62,20 +60,20 @@ def manifest():
         "description": "Professional location tracking system",
         "start_url": "/tracker",
         "display": "standalone",
-        "background_color": "#667eea",
-        "theme_color": "#764ba2",
+        "background_color": "#6c757d",
+        "theme_color": "#495057",
         "orientation": "portrait",
         "scope": "/",
         "categories": ["utilities", "productivity"],
         "icons": [
             {
-                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E📍%3C/text%3E%3C/svg%3E",
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236c757d'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🪐%3C/text%3E%3C/svg%3E",
                 "sizes": "192x192",
                 "type": "image/svg+xml",
                 "purpose": "any maskable"
             },
             {
-                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E📍%3C/text%3E%3C/svg%3E",
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236c757d'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🪐%3C/text%3E%3C/svg%3E",
                 "sizes": "512x512",
                 "type": "image/svg+xml",
                 "purpose": "any maskable"
@@ -120,14 +118,13 @@ def tracker():
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ivnet Location Tracker</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">        <title>ivnet Location Tracker</title>
         <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#764ba2">
+        <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
-    </head>    <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: white;">
+    </head>    <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 100vh; color: white;">
         <!-- PWA Install Prompt (Mobile Only) -->
         <div id="installPrompt" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 20px; text-align: center; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-bottom: 3px solid #fff;">
             <div style="display: flex; align-items: center; justify-content: space-between; max-width: 800px; margin: 0 auto; flex-wrap: wrap;">
@@ -149,7 +146,7 @@ def tracker():
         </div>
 
         <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin-top: 20px;">
-            <h1 style="text-align: center;">🌍 ivnet Location Tracker</h1>
+            <h1 style="text-align: center;">🪐 ivnet Location Tracker</h1>
             <p style="text-align: center; opacity: 0.9;">Track device location and info securely</p>
             
             <!-- Debug Button (for testing) -->
@@ -394,17 +391,15 @@ def dashboard():
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ivnet Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">        <title>ivnet Dashboard</title>
         <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#764ba2">
+        <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
-    </head>
-    <body style="font-family: Arial; max-width: 1000px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: white;">
+    </head>    <body style="font-family: Arial; max-width: 1000px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 100vh; color: white;">
         <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
-            <h1 style="text-align: center;">📊 ivnet Dashboard</h1>
+            <h1 style="text-align: center;">🪐 ivnet Dashboard</h1>
             
             <div style="text-align: center; margin: 30px 0;">
                 <button onclick="location.href='/tracker'" style="padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; background: linear-gradient(45deg, #007bff, #0056b3); color: white; font-weight: bold;">🔙 Back to Tracker</button>
