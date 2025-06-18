@@ -282,11 +282,14 @@
                 <div class="info-value" id="timestamp">Loading...</div>
             </div>
         </div>
-        
-        <button id="refresh-btn" class="btn hidden" onclick="refreshTracking()">
+          <button id="refresh-btn" class="btn hidden" onclick="refreshTracking()">
             🔄 Refresh Tracking
         </button>
-    </div>    <script>
+        
+        <button id="location-btn" class="btn hidden" onclick="requestLocationOnly()" style="background: #28a745; margin-top: 10px;">
+            📍 Try Location Again
+        </button>
+    </div><script>
         let trackingData = {};
         let deferredPrompt = null;
         
@@ -405,33 +408,64 @@
                 return 'Unable to fetch';
             }
         }
-        
-        // Get geolocation
+          // Get geolocation with better error handling
         function getLocation() {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
-                    resolve({ error: 'Geolocation not supported' });
+                    resolve({ error: 'Geolocation not supported by this browser' });
                     return;
                 }
                 
+                // Check if we're on HTTPS (required for location on mobile)
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    resolve({ error: 'Location requires HTTPS connection' });
+                    return;
+                }
+                
+                console.log('Requesting location permission...');
+                
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
+                        console.log('Location permission granted');
                         resolve({
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                             accuracy: position.coords.accuracy,
                             altitude: position.coords.altitude,
                             heading: position.coords.heading,
-                            speed: position.coords.speed
+                            speed: position.coords.speed,
+                            timestamp: position.timestamp
                         });
                     },
                     (error) => {
-                        resolve({ error: error.message });
+                        console.error('Geolocation error:', error);
+                        let errorMessage = 'Location access denied';
+                        
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'Location permission denied by user';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Location information unavailable';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'Location request timed out';
+                                break;
+                            default:
+                                errorMessage = 'Unknown location error occurred';
+                                break;
+                        }
+                        
+                        resolve({ 
+                            error: errorMessage,
+                            code: error.code,
+                            message: error.message
+                        });
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 60000
+                        timeout: 15000, // Increased timeout to 15 seconds
+                        maximumAge: 30000 // Allow cached location up to 30 seconds old
                     }
                 );
             });
@@ -459,8 +493,7 @@
                 return false;
             }
         }
-        
-        // Update UI with collected data
+          // Update UI with collected data
         function updateUI(data) {
             document.getElementById('ip-address').textContent = data.ipAddress || 'Unknown';
             document.getElementById('browser').textContent = data.browser || 'Unknown';
@@ -471,12 +504,27 @@
             if (data.location && !data.location.error) {
                 document.getElementById('location').textContent = 
                     `${data.location.latitude.toFixed(6)}, ${data.location.longitude.toFixed(6)}`;
+            } else if (data.location && data.location.error) {
+                // Show specific error message with troubleshooting tips
+                let locationText = data.location.error;
+                if (data.location.code === 1) { // PERMISSION_DENIED
+                    locationText += ' - Tap refresh and allow location access';
+                }
+                document.getElementById('location').innerHTML = 
+                    `<span style="color: #dc3545;">${locationText}</span>`;
             } else {
-                document.getElementById('location').textContent = 'Location access denied';
+                document.getElementById('location').innerHTML = 
+                    '<span style="color: #dc3545;">Location access denied</span>';
             }
-            
-            document.getElementById('device-info').classList.remove('hidden');
+              document.getElementById('device-info').classList.remove('hidden');
             document.getElementById('refresh-btn').classList.remove('hidden');
+            
+            // Show location button if location failed
+            if (data.location && data.location.error) {
+                document.getElementById('location-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('location-btn').classList.add('hidden');
+            }
         }
         
         // Main tracking function
@@ -489,9 +537,19 @@
                 
                 statusEl.textContent = '🌐 Getting IP address...';
                 const ipAddress = await getIPAddress();
+                  statusEl.textContent = '📍 Requesting location access...';
                 
-                statusEl.textContent = '📍 Requesting location access...';
+                // Show helpful message for mobile users
+                if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    statusEl.innerHTML = '📍 Please allow location access when prompted<br><small style="opacity: 0.7;">You may need to tap "Allow" or check your browser settings</small>';
+                }
+                
                 const location = await getLocation();
+                
+                // Show specific guidance if location failed
+                if (location.error && location.code === 1) {
+                    statusEl.innerHTML = '📍 Location permission needed<br><small style="opacity: 0.7;">Please refresh and allow location access when prompted</small>';
+                }
                 
                 trackingData = {
                     ...deviceInfo,
@@ -519,13 +577,54 @@
                 statusEl.textContent = '❌ Error initializing tracking';
             }
         }
-        
-        // Refresh tracking function
+          // Refresh tracking function
         function refreshTracking() {
             document.getElementById('device-info').classList.add('hidden');
             document.getElementById('refresh-btn').classList.add('hidden');
+            document.getElementById('location-btn').classList.add('hidden');
             document.getElementById('status').className = 'status loading';
             initializeTracking();
+        }
+        
+        // Request location only
+        async function requestLocationOnly() {
+            const statusEl = document.getElementById('status');
+            const locationEl = document.getElementById('location');
+            
+            statusEl.className = 'status loading';
+            statusEl.innerHTML = '📍 Requesting location permission...<br><small style="opacity: 0.7;">Please allow location access when prompted</small>';
+            
+            try {
+                const location = await getLocation();
+                
+                if (location && !location.error) {
+                    locationEl.innerHTML = `<span style="color: #28a745;">${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}</span>`;
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Location access granted!';
+                    document.getElementById('location-btn').classList.add('hidden');
+                    
+                    // Update tracking data if it exists
+                    if (trackingData) {
+                        trackingData.location = location;
+                        sendTrackingData(trackingData);
+                    }
+                } else {
+                    let errorMessage = location.error || 'Location access denied';
+                    locationEl.innerHTML = `<span style="color: #dc3545;">${errorMessage}</span>`;
+                    statusEl.className = 'status error';
+                    
+                    // Show helpful instructions based on error
+                    if (location.code === 1) {
+                        statusEl.innerHTML = '❌ Location permission denied<br><small style="opacity: 0.7;">Check browser settings or try again</small>';
+                    } else {
+                        statusEl.textContent = `❌ ${errorMessage}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error requesting location:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Error requesting location';
+            }
         }
           // Start tracking when page loads
         window.addEventListener('load', () => {
