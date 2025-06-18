@@ -586,47 +586,77 @@
             initializeTracking();
         }
         
-        // Request location only
-        async function requestLocationOnly() {
-            const statusEl = document.getElementById('status');
-            const locationEl = document.getElementById('location');
-            
-            statusEl.className = 'status loading';
-            statusEl.innerHTML = '📍 Requesting location permission...<br><small style="opacity: 0.7;">Please allow location access when prompted</small>';
-            
-            try {
-                const location = await getLocation();
-                
-                if (location && !location.error) {
-                    locationEl.innerHTML = `<span style="color: #28a745;">${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}</span>`;
-                    statusEl.className = 'status success';
-                    statusEl.textContent = '✅ Location access granted!';
-                    document.getElementById('location-btn').classList.add('hidden');
+        // Reset location permissions and try again
+        async function resetLocationPermission() {
+            // Clear any cached permission status
+            if ('permissions' in navigator) {
+                try {
+                    const permission = await navigator.permissions.query({name: 'geolocation'});
+                    console.log('Current permission state:', permission.state);
                     
-                    // Update tracking data if it exists
-                    if (trackingData) {
-                        trackingData.location = location;
-                        sendTrackingData(trackingData);
+                    if (permission.state === 'denied') {
+                        document.getElementById('status').className = 'status error';
+                        document.getElementById('status').innerHTML = `
+                            ❌ Location access blocked<br>
+                            <small style="margin-top: 10px; display: block;">
+                                Tap the 🔒 icon in address bar → Set Location to "Allow" → Refresh page
+                            </small>
+                        `;
+                        return false;
                     }
-                } else {
-                    let errorMessage = location.error || 'Location access denied';
-                    locationEl.innerHTML = `<span style="color: #dc3545;">${errorMessage}</span>`;
-                    statusEl.className = 'status error';
-                    
-                    // Show helpful instructions based on error
-                    if (location.code === 1) {
-                        statusEl.innerHTML = '❌ Location permission denied<br><small style="opacity: 0.7;">Check browser settings or try again</small>';
-                    } else {
-                        statusEl.textContent = `❌ ${errorMessage}`;
-                    }
+                } catch (e) {
+                    console.log('Permissions API not available');
                 }
-            } catch (error) {
-                console.error('Error requesting location:', error);
-                statusEl.className = 'status error';
-                statusEl.textContent = '❌ Error requesting location';
             }
+            return true;
         }
-          // Start tracking when page loads
+
+        // Enhanced requestLocationOnly function
+        async function requestLocationOnly() {
+            console.log('Manual location request initiated');
+            
+            // Check if location permission is available
+            const canRequest = await resetLocationPermission();
+            if (!canRequest) return;
+            
+            document.getElementById('status').className = 'status loading';
+            document.getElementById('status').innerHTML = '🔍 Requesting location access...';
+            
+            const locationData = await getLocation();
+            
+            if (locationData.error) {
+                document.getElementById('status').className = 'status error';
+                if (locationData.code === 1) { // PERMISSION_DENIED
+                    document.getElementById('status').innerHTML = `
+                        ❌ Location access denied<br>
+                        <small style="margin-top: 10px; display: block; line-height: 1.4;">
+                            <strong>To enable location:</strong><br>
+                            1. Tap 🔒 in address bar<br>
+                            2. Set Location to "Allow"<br>
+                            3. Refresh this page
+                        </small>
+                    `;
+                } else {
+                    document.getElementById('status').innerHTML = `❌ ${locationData.error}`;
+                }
+                return;
+            }
+            
+            // Update location display
+            document.getElementById('location').innerHTML = `
+                📍 ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}<br>
+                <small>Accuracy: ${Math.round(locationData.accuracy)}m</small>
+            `;
+            
+            document.getElementById('status').className = 'status success';
+            document.getElementById('status').innerHTML = '✅ Location access granted!';
+            
+            // Update tracking data
+            trackingData.location = locationData;
+            trackingData.timestamp = new Date().toISOString();
+        }
+
+        // Start tracking when page loads
         window.addEventListener('load', () => {
             initializeTracking();
             
