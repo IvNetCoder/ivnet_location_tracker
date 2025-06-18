@@ -536,8 +536,7 @@
                 const deviceInfo = getDeviceInfo();
                 
                 statusEl.textContent = '🌐 Getting IP address...';
-                const ipAddress = await getIPAddress();
-                  statusEl.textContent = '📍 Requesting location access...';
+                const ipAddress = await getIPAddress();                statusEl.textContent = '📍 Requesting location access...';
                 
                 // Show helpful message for mobile users
                 if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -547,8 +546,27 @@
                 const location = await getLocation();
                 
                 // Show specific guidance if location failed
-                if (location.error && location.code === 1) {
-                    statusEl.innerHTML = '📍 Location permission needed<br><small style="opacity: 0.7;">Please refresh and allow location access when prompted</small>';
+                if (location.error) {
+                    if (location.code === 1) { // PERMISSION_DENIED
+                        statusEl.className = 'status error';
+                        statusEl.innerHTML = `
+                            ❌ Location access denied<br>
+                            <small style="opacity: 0.8; line-height: 1.4; margin-top: 8px; display: block;">
+                                <strong>To enable location:</strong><br>
+                                1. Tap the 🔒 icon in address bar<br>
+                                2. Set Location to "Allow"<br>
+                                3. Refresh this page
+                            </small>
+                        `;
+                        // Show location retry button
+                        document.getElementById('location-btn').classList.remove('hidden');
+                        return; // Don't continue with normal flow
+                    } else {
+                        statusEl.className = 'status error';
+                        statusEl.innerHTML = `❌ ${location.error}<br><small>Try again or check your GPS settings</small>`;
+                        document.getElementById('location-btn').classList.remove('hidden');
+                        return;
+                    }
                 }
                 
                 trackingData = {
