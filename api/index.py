@@ -48,7 +48,7 @@ def manifest():
                 "purpose": "any maskable"
             },
             {
-                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236c757d'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🌎%3C/text%3E%3C/svg%3E",
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236c757d'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E😭%3C/text%3E%3C/svg%3E",
                 "sizes": "512x512",
                 "type": "image/svg+xml",
                 "purpose": "any maskable"
@@ -94,7 +94,7 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🌎 Location Tracker</title>
+        <title>😭 Location Tracker</title>
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
