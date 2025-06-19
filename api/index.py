@@ -177,19 +177,14 @@ def tracker():
         </div>
 
         <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin-top: 20px;">
-            <h1 style="text-align: center;">🪐 ivnet Location Tracker</h1>
+            <h1 style="text-align: center;">🌎 IvNet Location Tracker</h1>
             <p style="text-align: center; opacity: 0.9;">Track device location and info securely</p>
-            
-            <!-- Debug Button (for testing) -->
+              <!-- Debug Button (for testing) -->
             <div style="text-align: center; margin: 10px 0;">
-                <button onclick="toggleDebug()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7;">🔍 Debug</button>
-                <button onclick="forceShowInstall()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.7; margin-left: 5px;">📱 Test Install</button>
-            </div>
-              <div style="text-align: center; margin: 20px 0;">
+                <!-- Debug buttons removed for cleaner interface -->
+            </div>            <div style="text-align: center; margin: 20px 0;">
                 <button onclick="getLocation()" style="padding: 15px 25px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; background: linear-gradient(45deg, #007bff, #0056b3); color: white;">📍 Get My Location</button>
                 <button onclick="location.href='/dashboard'" style="padding: 15px 25px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; background: linear-gradient(45deg, #6c757d, #545b62); color: white;">📊 View Dashboard</button>
-                <br>
-                <button onclick="testButton()" style="padding: 8px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.2); color: white;">🧪 Test Button</button>
             </div>
             
             <div id="status"></div>
@@ -455,7 +450,7 @@ def tracker():
                 }
 
                 debugLog('All checks passed, requesting location...');
-                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Requesting location permission...</div>';
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; mxargin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔍 Requesting location permission...</div>';
                 
                 // Simple geolocation options
                 const options = {
@@ -558,7 +553,7 @@ def dashboard():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🪐 ivnet Dashboard</title>
+        <title>🌎 ivnet Dashboard</title>
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -568,7 +563,7 @@ def dashboard():
     </head>
     <body style="font-family: Arial; max-width: 1000px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 100vh; color: white;">
         <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
-            <h1 style="text-align: center;">🪐 ivnet Dashboard</h1>
+            <h1 style="text-align: center;">🌎 ivnet Dashboard</h1>
             
             <div style="text-align: center; margin: 30px 0;">
                 <button onclick="location.href='/tracker'" style="padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; background: linear-gradient(45deg, #007bff, #0056b3); color: white; font-weight: bold;">🔙 Back to Tracker</button>
