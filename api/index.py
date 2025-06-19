@@ -143,7 +143,7 @@ def tracker():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🌎 Location Tracker</title>
+        <title>😭 Location Tracker</title>
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" content="#495057">
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -153,7 +153,7 @@ def tracker():
         <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
         <meta name="mobile-web-capable" content="yes">
         <meta http-equiv="Feature-Policy" content="geolocation 'self'">
-        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='90' font-size='90'%3E🌎%3C/text%3E%3C/svg%3E">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='90' font-size='90'%3E😭%3C/text%3E%3C/svg%3E">
     </head>
     <body style="font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 100vh; color: white;">
         <!-- PWA Install Prompt (Mobile Only) -->
