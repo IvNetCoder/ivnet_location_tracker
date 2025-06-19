@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 import json
 from datetime import datetime
@@ -54,7 +53,7 @@ def home():
     </head>
     <body>
         <div class="container">
-            <h1>🌍 ivnet Location Tracker</h1>
+            <h1>🌍 Location Tracker</h1>
             <p>Professional location tracking system</p>
             <div>
                 <a href="/tracker">📍 Start Tracking</a>
@@ -139,7 +138,7 @@ def tracker():
     </head>
     <body>
         <div class="container">
-            <h1>🌍 ivnet Location Tracker</h1>
+            <h1>🌍 Location Tracker</h1>
             <p class="subtitle">Track device location and info securely</p>
             
             <div class="button-container">
@@ -202,7 +201,7 @@ def tracker():
                         })
                         .then(response => response.json())
                         .then(result => {
-                            showStatus('✅ Location saved successfully! Server is ONLINE!', 'success');
+                            showStatus('✅ Location saved successfully!', 'success');
                         })
                         .catch(error => {
                             showStatus('⚠️ Location captured but server error', 'error');
