@@ -426,12 +426,93 @@ def tracker():
                     }
                 }
                 return 'unknown';
-            }            // Location tracking function with enhanced error handling
+            }            // Location tracking function with enhanced error handling            // Simple location tracking function
             function getLocation() {
-                debugLog('getLocation() called - button clicked successfully');
+                console.log('Get Location button clicked');
                 
-                // Immediate feedback that button was clicked
-                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">� Button clicked! Checking location access...</div>';
+                // Show immediate feedback
+                document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(23, 162, 184, 0.8);">🔄 Getting location...</div>';
+                
+                // Check if geolocation is supported
+                if (!navigator.geolocation) {
+                    document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ Geolocation not supported</div>';
+                    return;
+                }
+                
+                // Request location
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        console.log('Location received:', position);
+                        
+                        const data = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent,
+                            platform: navigator.platform
+                        };
+                        
+                        // Display location info
+                        document.getElementById('locationInfo').innerHTML = `
+                            <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <h3>📍 Location Found!</h3>
+                                <p><strong>Latitude:</strong> ${data.latitude.toFixed(6)}</p>
+                                <p><strong>Longitude:</strong> ${data.longitude.toFixed(6)}</p>
+                                <p><strong>Accuracy:</strong> ${Math.round(data.accuracy)} meters</p>
+                                <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                                <p><strong>🗺️ Maps:</strong> <a href="https://www.google.com/maps?q=${data.latitude},${data.longitude}" target="_blank" style="color: #ffd700;">View on Google Maps</a></p>
+                            </div>
+                        `;
+                        
+                        document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Saving to server...</div>';
+                        
+                        // Save to server
+                        fetch('/save', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log('Saved to server:', result);
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(40, 167, 69, 0.8);">✅ Location saved successfully!</div>';
+                        })
+                        .catch(error => {
+                            console.error('Save error:', error);
+                            document.getElementById('status').innerHTML = '<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(255, 193, 7, 0.8);">⚠️ Location found but server error</div>';
+                        });
+                    },
+                    function(error) {
+                        console.error('Location error:', error);
+                        
+                        let message = 'Location access failed';
+                        let help = '';
+                        
+                        switch(error.code) {
+                            case 1: // PERMISSION_DENIED
+                                message = 'Location access denied';
+                                help = '<br><small style="margin-top: 10px; display: block;">Tap the 🔒 icon in address bar → Allow Location → Refresh page</small>';
+                                break;
+                            case 2: // POSITION_UNAVAILABLE
+                                message = 'Location unavailable';
+                                help = '<br><small style="margin-top: 10px; display: block;">Check your GPS and internet connection</small>';
+                                break;
+                            case 3: // TIMEOUT
+                                message = 'Location request timed out';
+                                help = '<br><small style="margin-top: 10px; display: block;">Please try again</small>';
+                                break;
+                        }
+                        
+                        document.getElementById('status').innerHTML = `<div style="padding: 15px; margin: 15px 0; border-radius: 10px; text-align: center; font-weight: bold; background-color: rgba(220, 53, 69, 0.8);">❌ ${message}${help}</div>';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            }
                 
                 // Check if geolocation is supported
                 if (!navigator.geolocation) {
