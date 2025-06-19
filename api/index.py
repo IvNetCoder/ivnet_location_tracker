@@ -100,7 +100,7 @@ def home():
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="ivnet Tracker">
-        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='90' font-size='90'%3E😭%3C/text%3E%3C/svg%3E">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E🌎%3Ctext y='90' font-size='90'%3E😭%3C/text%3E%3C/svg%3E">
     </head>
     <body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; min-height: 100vh; margin: 0;">
         <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 15px; max-width: 500px; margin: 0 auto;">
